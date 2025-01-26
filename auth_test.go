@@ -71,17 +71,17 @@ func TestServer(t *testing.T) {
 		t.Fatalf("pinging db: %v", err)
 	}
 
-	row := db.QueryRowContext(ctx,
+	_, err = db.ExecContext(ctx,
 		"CREATE TABLE users (email varchar(255) NOT NULL, encrypted_password varchar(255) NOT NULL)",
 	)
-	if row.Err() != nil {
+	if err != nil {
 		t.Fatalf("creating table: %v", err)
 	}
 
-	row = db.QueryRowContext(ctx,
+	_, err = db.ExecContext(ctx,
 		"INSERT INTO users VALUES ('admin@owo.cafe', '$2y$10$jRO9TrmycLZQZqHJpr8F4ezOCh6EVDpenyZJYceHhGuDRyBvARFl6')", // bcrypt('nya nya uwu')
 	)
-	if row.Err() != nil {
+	if err != nil {
 		t.Fatalf("creating table: %v", err)
 	}
 
