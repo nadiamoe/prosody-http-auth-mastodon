@@ -113,25 +113,6 @@ func TestServer(t *testing.T) {
 		}
 	})
 
-	t.Run("no content-type", func(t *testing.T) {
-		t.Parallel()
-
-		req, err := http.NewRequest(http.MethodPost, server.URL+"/auth", nil)
-		if err != nil {
-			t.Fatalf("creating request: %v", err)
-		}
-
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			t.Fatalf("requesting /auth: %v", err)
-		}
-		resp.Body.Close()
-
-		if resp.StatusCode != http.StatusBadRequest {
-			t.Fatalf("unexpected status code %d", resp.StatusCode)
-		}
-	})
-
 	t.Run("bad body", func(t *testing.T) {
 		t.Parallel()
 
@@ -211,8 +192,6 @@ func TestServer(t *testing.T) {
 			if err != nil {
 				t.Fatalf("creating request: %v", err)
 			}
-
-			req.Header.Add("content-type", "application/json")
 
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {

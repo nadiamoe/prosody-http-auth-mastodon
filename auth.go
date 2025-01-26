@@ -71,11 +71,6 @@ func (s *Server) health(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) auth(rw http.ResponseWriter, r *http.Request) {
-	if ct := r.Header.Get("content-type"); ct != "application/json" {
-		statusLogWrite(rw, http.StatusBadRequest, "unexpected content type %q", ct)
-		return
-	}
-
 	authReq := ProsodyAuthRequest{}
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
