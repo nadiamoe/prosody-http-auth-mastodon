@@ -87,7 +87,7 @@ func (s *Server) auth(rw http.ResponseWriter, r *http.Request) {
 	var hash string
 	err = s.db.QueryRowContext(
 		ctx,
-		"SELECT encrypted_password FROM users WHERE account_id = (SELECT id FROM accounts WHERE username = $1 AND domain = $2)",
+		"SELECT encrypted_password FROM users WHERE account_id = (SELECT id FROM accounts WHERE username = lower($1) AND domain = lower($2))",
 		authReq.Username,
 		s.Domain,
 	).Scan(&hash)
