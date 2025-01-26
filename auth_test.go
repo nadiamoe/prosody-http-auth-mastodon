@@ -184,6 +184,13 @@ func TestServer(t *testing.T) {
 			expectedCode: http.StatusNotFound,
 		},
 		{
+			// This should be impossible with the Go SQL driver using statements, but hey, the test case is free.
+			name:         "sql-injection does not work",
+			username:     "' OR 1=1 OR email = 'admin@owo.cafe",
+			password:     "nya nya uwu",
+			expectedCode: http.StatusNotFound,
+		},
+		{
 			name:         "wrong password",
 			username:     "admin@owo.cafe",
 			password:     "uwu",
