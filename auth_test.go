@@ -71,18 +71,16 @@ func TestServer(t *testing.T) {
 		t.Fatalf("pinging db: %v", err)
 	}
 
-	_, err = db.ExecContext(ctx,
-		"CREATE TABLE users (email varchar(255) NOT NULL, encrypted_password varchar(255) NOT NULL)",
-	)
-	if err != nil {
-		t.Fatalf("creating table: %v", err)
-	}
-
-	_, err = db.ExecContext(ctx,
-		"INSERT INTO users VALUES ('admin@owo.cafe', '$2y$10$jRO9TrmycLZQZqHJpr8F4ezOCh6EVDpenyZJYceHhGuDRyBvARFl6')", // bcrypt('nya nya uwu')
-	)
-	if err != nil {
-		t.Fatalf("creating table: %v", err)
+	for _, query := range []string{
+		"CREATE TABLE users (id bigint NOT NULL, encrypted_password varchar(255) NOT NULL, account_id bigint NOT NULL)",
+		"CREATE TABLE accounts (id bigint NOT NULL, username varchar(255) NOT NULL, domain varchar(255))",
+		"INSERT INTO users VALUES (1, '$2y$10$jRO9TrmycLZQZqHJpr8F4ezOCh6EVDpenyZJYceHhGuDRyBvARFl6', 100)", // bcrypt('nya nya uwu')"
+		"INSERT INTO accounts VALUES (100, 'admin', 'owo.cafe')",
+	} {
+		_, err = db.ExecContext(ctx, query)
+		if err != nil {
+			t.Fatalf("running init query %q: %v", query, err)
+		}
 	}
 
 	err = db.Close()
@@ -148,38 +146,32 @@ func TestServer(t *testing.T) {
 		},
 		{
 			name:         "empty password",
-			username:     "admin@owo.cafe",
+			username:     "admin",
 			password:     "",
 			expectedCode: http.StatusBadRequest,
 		},
 		{
-			name:         "out of domain",
-			username:     "perico@palot.es",
-			password:     "foo",
-			expectedCode: http.StatusForbidden,
-		},
-		{
 			name:         "non-existing user",
-			username:     "who@owo.cafe",
+			username:     "who",
 			password:     "foo",
 			expectedCode: http.StatusNotFound,
 		},
 		{
 			// This should be impossible with the Go SQL driver using statements, but hey, the test case is free.
 			name:         "sql-injection does not work",
-			username:     "' OR 1=1 OR email = 'admin@owo.cafe",
+			username:     "' OR 1=1 OR email = 'admin",
 			password:     "nya nya uwu",
 			expectedCode: http.StatusNotFound,
 		},
 		{
 			name:         "wrong password",
-			username:     "admin@owo.cafe",
+			username:     "admin",
 			password:     "uwu",
 			expectedCode: http.StatusForbidden,
 		},
 		{
 			name:         "ok password",
-			username:     "admin@owo.cafe",
+			username:     "admin",
 			password:     "nya nya uwu",
 			expectedCode: http.StatusOK,
 		},
