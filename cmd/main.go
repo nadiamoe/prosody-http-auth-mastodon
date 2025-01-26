@@ -22,9 +22,7 @@ func run() error {
 		return errors.New("empty DB_URL")
 	}
 
-	server := &prosodyhttpauthmastodon.Server{
-		Domain: os.Getenv("DOMAIN"),
-	}
+	server := &prosodyhttpauthmastodon.Server{}
 	err := server.Start(dbUrl)
 	if err != nil {
 		return fmt.Errorf("starting server: %w", err)

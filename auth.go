@@ -15,9 +15,8 @@ import (
 )
 
 type Server struct {
-	Domain string // Part after the @. Will be used to validate requests.
-	db     *sql.DB
-	mux    *http.ServeMux
+	db  *sql.DB
+	mux *http.ServeMux
 }
 
 func (s *Server) Start(conn string) error {
@@ -87,9 +86,8 @@ func (s *Server) auth(rw http.ResponseWriter, r *http.Request) {
 	var hash string
 	err = s.db.QueryRowContext(
 		ctx,
-		"SELECT encrypted_password FROM users WHERE account_id = (SELECT id FROM accounts WHERE username = lower($1) AND domain = lower($2))",
+		"SELECT encrypted_password FROM users WHERE account_id = (SELECT id FROM accounts WHERE username = lower($1) AND domain IS NULL)",
 		authReq.Username,
-		s.Domain,
 	).Scan(&hash)
 	if errors.Is(err, sql.ErrNoRows) {
 		statusLogWrite(rw, http.StatusNotFound, "No record found for user %q", authReq.Username)
