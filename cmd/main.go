@@ -17,7 +17,7 @@ func main() {
 }
 
 func run() error {
-	dbUrl := os.Getenv("DB_URL")
+	dbUrl := os.ExpandEnv(os.Getenv("DB_URL"))
 	if dbUrl == "" {
 		return errors.New("empty DB_URL")
 	}
