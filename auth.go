@@ -103,7 +103,12 @@ func (s *Server) auth(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	statusLogWrite(rw, http.StatusOK, "authentication succeeded for %q", authReq.Username)
+	log.Printf("authentication succeeded for %q", authReq.Username)
+
+	// The module expects the response body to be exactly true if the username and password are correct.
+	// Ref: https://modules.prosody.im/mod_auth_custom_http.html
+	rw.WriteHeader(http.StatusOK)
+	_, _ = rw.Write([]byte("true"))
 }
 
 func statusLogWrite(rw http.ResponseWriter, status int, msg string, args ...any) {
