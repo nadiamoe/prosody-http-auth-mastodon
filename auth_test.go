@@ -1,9 +1,11 @@
 package prosodyhttpauthmastodon_test
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -72,10 +74,15 @@ func TestServer(t *testing.T) {
 	}
 
 	for _, query := range []string{
-		"CREATE TABLE users (id bigint NOT NULL, encrypted_password varchar(255) NOT NULL, account_id bigint NOT NULL)",
+		"CREATE TABLE users (id bigint NOT NULL, encrypted_password varchar(255) NOT NULL, approved boolean NOT NULL, disabled boolean NOT NULL, account_id bigint NOT NULL)",
 		"CREATE TABLE accounts (id bigint NOT NULL, username varchar(255) NOT NULL, domain varchar(255))",
-		"INSERT INTO users VALUES (1, '$2y$10$jRO9TrmycLZQZqHJpr8F4ezOCh6EVDpenyZJYceHhGuDRyBvARFl6', 100)", // bcrypt('nya nya uwu')"
+		"INSERT INTO users VALUES (1, '$2y$10$jRO9TrmycLZQZqHJpr8F4ezOCh6EVDpenyZJYceHhGuDRyBvARFl6', true,  false, 100)", // bcrypt('nya nya uwu')"
+		"INSERT INTO users VALUES (2, '$2y$10$jRO9TrmycLZQZqHJpr8F4ezOCh6EVDpenyZJYceHhGuDRyBvARFl6', true,  true,  200)",
+		"INSERT INTO users VALUES (3, '$2y$10$jRO9TrmycLZQZqHJpr8F4ezOCh6EVDpenyZJYceHhGuDRyBvARFl6', false, false, 200)",
 		"INSERT INTO accounts VALUES (100, 'admin', NULL)",
+		"INSERT INTO accounts VALUES (200, 'disabled', NULL)",
+		"INSERT INTO accounts VALUES (300, 'notapproved', NULL)",
+		"INSERT INTO accounts VALUES (900, 'foreign', 'somewhere.else')",
 	} {
 		_, err = db.ExecContext(ctx, query)
 		if err != nil {
@@ -175,6 +182,18 @@ func TestServer(t *testing.T) {
 			password:     "nya nya uwu",
 			expectedCode: http.StatusOK,
 		},
+		{
+			name:         "disabled user",
+			username:     "disabled",
+			password:     "nya nya uwu",
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:         "not approved user",
+			username:     "notapproved",
+			password:     "nya nya uwu",
+			expectedCode: http.StatusNotFound,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
@@ -189,7 +208,19 @@ func TestServer(t *testing.T) {
 			if err != nil {
 				t.Fatalf("requesting /auth: %v", err)
 			}
-			resp.Body.Close()
+
+			responseBody, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("reading response body: %v", err)
+			}
+
+			if bytes.Equal(responseBody, []byte("true")) && resp.StatusCode != http.StatusOK {
+				t.Fatalf("200 found \"true\" as body, for a non-200 status code %d", resp.StatusCode)
+			}
+
+			if resp.StatusCode == http.StatusOK && !bytes.Equal(responseBody, []byte("true")) {
+				t.Fatalf("200 OK should contain \"true\" as body, found %q instead", string(body))
+			}
 
 			if resp.StatusCode != tc.expectedCode {
 				t.Fatalf("expected code %d, got %d", tc.expectedCode, resp.StatusCode)
