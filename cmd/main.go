@@ -23,7 +23,15 @@ func run() error {
 	}
 
 	server := &prosodyhttpauthmastodon.Server{}
-	err := server.Start(dbUrl)
+	err := server.Start(
+		prosodyhttpauthmastodon.Options{
+			DBURL: dbUrl,
+			Selftest: prosodyhttpauthmastodon.ProsodyAuthRequest{
+				Username: os.Getenv("SELFTEST_USERNAME"),
+				Password: os.Getenv("SELFTEST_PASSWORD"),
+			},
+		},
+	)
 	if err != nil {
 		return fmt.Errorf("starting server: %w", err)
 	}

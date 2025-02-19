@@ -10,3 +10,5 @@ Run the container, which can be configured with the following env vars:
 - `DB_URL` (required): URL to connect to the postgres database. Something like: `postgresql://user:password@host/mastodon_production?sslmode=disable`.
   - `DB_URL` can contain references to other environment variables, which will be expanded: `postgresql://${PG_USER}:${PG_PASSWORD}@host/mastodon_production?sslmode=disable`.
   - You must include `?sslmode=disable` if your postgres installation is not using TLS.
+- `SELFTEST_USERNAME`/`SELFTEST_PASSWORD`: If set, the `/health` endpoint will additionally try to validate those credentials as if they were a login request, and behave like `/auth` would.
+  - Useful as a live sanity check.
