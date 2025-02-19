@@ -70,7 +70,7 @@ func (s *Server) auth(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	if authReq.Empty() {
-		statusLogWrite(rw, http.StatusBadRequest, "empty username or password ")
+		statusLogWrite(rw, http.StatusBadRequest, "empty username or password")
 		return
 	}
 
