@@ -1,13 +1,11 @@
 package prosodyhttpauthmastodon
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"time"
@@ -17,23 +15,12 @@ import (
 )
 
 type Server struct {
-	db       *sql.DB
-	mux      *http.ServeMux
-	selftest ProsodyAuthRequest
+	db  *sql.DB
+	mux *http.ServeMux
 }
 
-type Options struct {
-	// DBURL is the URI that should be used to connect to mastodon's database.
-	DBURL string
-	// Selftest specifies an username and a password that, if non-empty, will be used to attempt a login when hitting
-	// /health using the same logic used for /auth.
-	// If this credentials fail to authenticate, following the same logic that they would if POSTed to /auth, then
-	// /health will return 403 Forbidden, signaling that something is wrong with the setup.
-	Selftest ProsodyAuthRequest
-}
-
-func (s *Server) Start(opts Options) error {
-	db, err := sql.Open("postgres", opts.DBURL)
+func (s *Server) Start(conn string) error {
+	db, err := sql.Open("postgres", conn)
 	if err != nil {
 		return fmt.Errorf("opening sql connection: %w", err)
 	}
@@ -43,9 +30,6 @@ func (s *Server) Start(opts Options) error {
 	s.mux = http.NewServeMux()
 	s.mux.HandleFunc("GET /health", s.health)
 	s.mux.HandleFunc("POST /auth", s.auth)
-
-	s.selftest = opts.Selftest
-
 	return nil
 }
 
@@ -72,22 +56,7 @@ func (s *Server) health(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if s.selftest.Username == "" {
-		rw.WriteHeader(http.StatusOK)
-		return
-	}
-
-	selftestReq := &bytes.Buffer{}
-	err = json.NewEncoder(selftestReq).Encode(s.selftest)
-	if err != nil {
-		statusLogWrite(rw, http.StatusInternalServerError, "encoding selftest data: %v", err)
-		return
-	}
-
-	r.Body = io.NopCloser(selftestReq)
-
-	// "Proxy" to /auth with selftest credentials.
-	s.auth(rw, r)
+	rw.WriteHeader(http.StatusOK)
 }
 
 func (s *Server) auth(rw http.ResponseWriter, r *http.Request) {

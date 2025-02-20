@@ -97,66 +97,8 @@ func TestServer(t *testing.T) {
 
 	t.Log(dbConn)
 
-	t.Run("health with self-test", func(t *testing.T) {
-		t.Parallel()
-
-		for _, tc := range []struct {
-			name        string
-			credentials prosodyhttpauthmastodon.ProsodyAuthRequest
-			expectCode  int
-		}{
-			{
-				name: "good creds",
-				credentials: prosodyhttpauthmastodon.ProsodyAuthRequest{
-					Username: "admin",
-					Password: "nya nya uwu",
-				},
-				expectCode: http.StatusOK,
-			},
-			{
-				name: "bad creds",
-				credentials: prosodyhttpauthmastodon.ProsodyAuthRequest{
-					Username: "admin",
-					Password: "wrong",
-				},
-				expectCode: http.StatusForbidden,
-			},
-		} {
-			t.Run(tc.name, func(t *testing.T) {
-				t.Parallel()
-
-				authServer := &prosodyhttpauthmastodon.Server{}
-				err = authServer.Start(
-					prosodyhttpauthmastodon.Options{
-						DBURL:    dbConn,
-						Selftest: tc.credentials,
-					},
-				)
-				if err != nil {
-					t.Fatalf("auth server connecting to DB: %v", err)
-				}
-
-				server := httptest.NewServer(authServer)
-				t.Cleanup(server.Close)
-
-				resp, err := http.Get(server.URL + "/health")
-				if err != nil {
-					t.Fatalf("requesting /health: %v", err)
-				}
-
-				resp.Body.Close()
-
-				if resp.StatusCode != tc.expectCode {
-					t.Fatalf("auth server did not pass heath: status %d", resp.StatusCode)
-				}
-			})
-		}
-	})
-
 	authServer := &prosodyhttpauthmastodon.Server{}
-	err = authServer.Start(
-		prosodyhttpauthmastodon.Options{DBURL: dbConn},
-	)
+	err = authServer.Start(dbConn)
 	if err != nil {
 		t.Fatalf("auth server connecting to DB: %v", err)
 	}
@@ -164,9 +106,7 @@ func TestServer(t *testing.T) {
 	server := httptest.NewServer(authServer)
 	t.Cleanup(server.Close)
 
-	t.Run("health wihtout selftest", func(t *testing.T) {
-		t.Parallel()
-
+	t.Run("health", func(t *testing.T) {
 		resp, err := http.Get(server.URL + "/health")
 		if err != nil {
 			t.Fatalf("requesting /health: %v", err)
