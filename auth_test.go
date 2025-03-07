@@ -78,11 +78,13 @@ func TestServer(t *testing.T) {
 		"CREATE TABLE accounts (id bigint NOT NULL, username varchar(255) NOT NULL, domain varchar(255))",
 		"INSERT INTO users VALUES (1, '$2y$10$jRO9TrmycLZQZqHJpr8F4ezOCh6EVDpenyZJYceHhGuDRyBvARFl6', true,  false, 100)", // bcrypt('nya nya uwu')"
 		"INSERT INTO users VALUES (2, '$2y$10$jRO9TrmycLZQZqHJpr8F4ezOCh6EVDpenyZJYceHhGuDRyBvARFl6', true,  true,  200)",
-		"INSERT INTO users VALUES (3, '$2y$10$jRO9TrmycLZQZqHJpr8F4ezOCh6EVDpenyZJYceHhGuDRyBvARFl6', false, false, 200)",
+		"INSERT INTO users VALUES (3, '$2y$10$jRO9TrmycLZQZqHJpr8F4ezOCh6EVDpenyZJYceHhGuDRyBvARFl6', false, false, 300)",
+		"INSERT INTO users VALUES (4, '$2y$10$jRO9TrmycLZQZqHJpr8F4ezOCh6EVDpenyZJYceHhGuDRyBvARFl6', true,  false, 400)", // bcrypt('nya nya uwu')"
 		"INSERT INTO accounts VALUES (100, 'admin', NULL)",
 		"INSERT INTO accounts VALUES (200, 'disabled', NULL)",
 		"INSERT INTO accounts VALUES (300, 'notapproved', NULL)",
 		"INSERT INTO accounts VALUES (900, 'foreign', 'somewhere.else')",
+		"INSERT INTO accounts VALUES (400, 'MixedCase', NULL)",
 	} {
 		_, err = db.ExecContext(ctx, query)
 		if err != nil {
@@ -179,6 +181,18 @@ func TestServer(t *testing.T) {
 		{
 			name:         "ok password",
 			username:     "admin",
+			password:     "nya nya uwu",
+			expectedCode: http.StatusOK,
+		},
+		{
+			name:         "exact case match",
+			username:     "MixedCase",
+			password:     "nya nya uwu",
+			expectedCode: http.StatusOK,
+		},
+		{
+			name:         "lowercase match",
+			username:     "mixedcase",
 			password:     "nya nya uwu",
 			expectedCode: http.StatusOK,
 		},

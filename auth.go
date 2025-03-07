@@ -87,7 +87,7 @@ func (s *Server) auth(rw http.ResponseWriter, r *http.Request) {
 	err = s.db.QueryRowContext(
 		ctx,
 		"SELECT encrypted_password FROM users WHERE approved = true AND disabled = false AND account_id = "+
-			"(SELECT id FROM accounts WHERE username = lower($1) AND domain IS NULL)",
+			"(SELECT id FROM accounts WHERE lower(username) = lower($1) AND domain IS NULL)",
 		authReq.Username,
 	).Scan(&hash)
 	if errors.Is(err, sql.ErrNoRows) {
