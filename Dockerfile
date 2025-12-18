@@ -5,6 +5,6 @@ COPY . .
 RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/root/go/pkg \
   go build -o /bin/authserver ./cmd
 
-FROM alpine:3.23.2@sha256:c93cec902b6a0c6ef3b5ab7c65ea36beada05ec1205664a4131d9e8ea13e405d
+FROM alpine:3.23.2@sha256:865b95f46d98cf867a156fe4a135ad3fe50d2056aa3f25ed31662dff6da4eb62
 COPY --from=builder /bin/authserver /usr/local/bin/
 ENTRYPOINT [ "/usr/local/bin/authserver" ]
