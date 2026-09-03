@@ -1,11 +1,11 @@
 module go.nadia.moe/prosody-http-auth-mastodon
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/lib/pq v1.12.3
 	github.com/testcontainers/testcontainers-go v0.44.0
-	golang.org/x/crypto v0.55.0
+	golang.org/x/crypto v0.56.0
 )
 
 require (
